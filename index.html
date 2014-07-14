@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Snake</title>
+
+    <meta name='author' content='Georgi Peev'>
+    <link rel='stylesheet' href='./bower_components/bootstrap/dist/css/bootstrap.min.css'>
+    <style>
+      #snake { border: 1px solid black; margin: auto; }
+      body { background: #272727; }
+      .container { background: #fff; }
+      #canvas-div { text-align: center; }
+    </style>
+  </head>
+  <body>
+    <div class='container'>
+      <div class='row alert alert-success'>
+        <h1>Snake</h1>
+      </div>
+      <div class='row'>
+        <div id='canvas-div' class='col-md-9'>
+          <canvas id='snake' width='800' height='450'></canvas>
+        </div>
+        <div class='col-md-3'>
+            <h3 id='score'>Score: 0</h3>
+            <h3>Settings</h3>
+            <form action='' role='form'>
+              <div class='form-group'>
+                <input id='speed' type='range' name='speed' min='1' max='10'>
+              </div>
+              <div class='form-group'>
+                <input id='color' type='color' name='snake-color'>
+              </div>
+              <div class='form-group'>
+                <input type='checkbox' name='pause' id='pause'>
+                <label for='pause'>Pause with 'P'?</label><br>
+              </div>
+              <div class='form-group'>
+                <input type='checkbox' name='reverse' id='reverse'>
+                <label for='reverse'>Reverse snake with R?</label>
+              </div>
+            </form>
+            <button id='top-scores' class='btn btn-sm btn-primary'>Top Scores</button>
+        </div>
+      </div>
+      <div class='row'>
+        <div class='col-md-9'>
+          <button id='re-start' class='btn btn-lg btn-primary center-block'>Start</button>
+          <br>
+        </div>
+      </div>
+    </div>
+
+    <div id='top-scores-modal' class="modal fade" role='dialog' aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            <h4 class="modal-title">Top scores:</h4>
+          </div>
+          <div class="modal-body">
+            <table class='table'>
+              <thead>
+                <th>#</th>
+                <th>Name</th>
+                <th>Score</th>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+
+    <script src='./bower_components/jquery/dist/jquery.min.js'></script>
+    <script src='./bower_components/bootstrap/dist/js/bootstrap.min.js'></script>
+    <script src='./app.js'></script>
+  </body>
+</html>
