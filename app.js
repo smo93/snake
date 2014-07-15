@@ -3,154 +3,61 @@ $(document).ready(function() {
     ctx = c.get(0).getContext('2d'),
     canvasWidth = c.width(),
     canvasHeight = c.height(),
-    intId, speed = 165, color = '#000000',
-    pause = false, pausable = false,
+    intId,
+    pause = false,
+    pausable = false,
     reversable = false,
-    topScores = JSON.parse(localStorage.getItem('topScores')),
-    snake = {
-      body : [[5, 0], [4, 0], [3, 0], [2, 0], [1, 0], [0, 0]],
-      length : 6,
-      direction : 'right',
-      dead : false,
-      skinColor : '#000000',
-      move : function() {
-        if(this.dead) { return { errorType: 'death', msg: 'You are dead!' }; }
-
-        var next;
-        switch(snake.direction) {
-          case 'left':
-            next = [this.body[0][0] - 1, this.body[0][1]];
-            if(next[0] < 0) { this.dead = true; return { errorType: 'wall', msg: 'You hit a wall!' }; }
-            break;
-          case 'right':
-            next = [this.body[0][0] + 1, this.body[0][1]];
-            if(next[0] >= canvasWidth / 10) { this.dead = true; return { errorType: 'wall', msg: 'You hit a wall!' }; }
-            break;
-          case 'up':
-            next = [this.body[0][0], this.body[0][1] - 1];
-            if(next[1] < 0) { this.dead = true; return { errorType: 'wall', msg: 'You hit a wall!' }; }
-            break;
-          case 'down':
-            next = [this.body[0][0], this.body[0][1] + 1];
-            if(next[1] >= canvasHeight / 10) { this.dead = true; return { errorType: 'wall', msg: 'You hit a wall!' }; }
-            break;
-        }
-
-        if(this.body[1][0] === next[0] && this.body[1][1] === next[1]) {
-          if(this.direction === 'left') { this.direction = 'right'; }
-          else if(this.direction === 'right') { this.direction = 'left'; }
-          else if(this.direction === 'up') { this.direction = 'down'; }
-          else if(this.direction === 'down') { this.direction = 'up'; }
-          snake.move();
-          return true;
-        }
-
-        if(this.body.filter(function(elem) {
-          return next[0] === elem[0] && next[1] === elem[1];
-        }).length !== 0) {
-          this.dead = true;
-          return { errorType: 'body', msg: 'You hit yourself!' };
-        }
-
-        this.body.unshift(next);
-        if(next[0] === food.position[0] && next[1] === food.position[1] && !food.eaten) {
-          this.length += 1;
-          food.eaten = true;
-          food.spawn();
-
-          $('#score').text('Score: ' + (this.length - 6) * 10);
-        } else {
-          this.body.pop();
-        }
-
-        return true;
-      },
-      render : function() {
-        ctx.fillStyle = this.skinColor;
-        this.body.forEach(function(bodyPart) {
-          ctx.fillRect(bodyPart[0] * 10, bodyPart[1] * 10, 10, 10);
-        });
-      },
-      checkScore : function() {
-        var score = (this.length - 6) * 10,
-          name;
-        if(score > topScores[topScores.length - 1] || topScores.length < 10) {
-          name = prompt('Enter your name:');
-          if(name === '') { return; }
-          topScores.push({ name: name, score: score });
-          topScores.sort(function(lhs, rhs) {
-            return rhs.score - lhs.score;
-          });
-          if(topScores.length > 10) { topScores.pop(); }
-          localStorage.setItem('topScores', JSON.stringify(topScores));
-        }
-      }
-    },
-    food = {
-      position: [10, 10],
-      eaten: false,
-      print: function() {
-        if(!this.eaten) {
-          ctx.fillStyle = '#123456';
-          ctx.fillRect(this.position[0] * 10, this.position[1] * 10, 10, 10);
-        }
-      },
-      spawn: function() {
-        var position = [0, 0];
-        position[0] = Math.floor(Math.random() * (canvasWidth / 10));
-        position[1] = Math.floor(Math.random() * (canvasHeight / 10));
-
-        if(snake.body.filter(function(elem) { return elem[0] === position[0] && elem[1] === position[1]; }).length !== 0) {
-          this.spawn();
-        }
-        this.eaten = false;
-        this.position = position;
-      }
-    };
+    running = false,
+    topScores = JSON.parse(localStorage.getItem('topScores'));
 
   if(topScores === null) { topScores = []; }
 
-  $(document).on('keydown', function(e) {
-    switch(e.which) {
-      case 37:
-        if(snake.direction !== 'right') {
-          snake.direction = 'left';
-        }
-        break;
-      case 38:
-        if(snake.direction !== 'down') {
-          snake.direction = 'up';
-        }
-        break;
-      case 39:
-        if(snake.direction !== 'left') {
-          snake.direction = 'right';
-        }
-        break;
-      case 40:
-        if(snake.direction !== 'up') {
-          snake.direction = 'down';
-        }
-        break;
-      case 80:
-        if(pausable) {
-          pause = !pause;
-        }
-        break;
-      case 82:
-        if(!reversable) { return; }
-        var newDirection = [snake.body[snake.length - 1][0] - snake.body[snake.length - 2][0],
-          snake.body[snake.length - 1][1] - snake.body[snake.length - 2][1]
+  ctx.font = '30px Arial';
+  ctx.fillText('Click anywhere to start', canvasWidth / 2 - 150, canvasHeight / 2);
+
+  $('#snake').on('mousedown', function() {
+    $(this).focus();
+
+    if(!running) {
+      running = true;
+      init();
+      clearInterval(intId);
+      intId = setInterval(loop, snake.speed);
+    }
+
+    return false;
+  }).on('keydown', function(e) {
+    if(e.which >= 37 && e.which <= 40) {
+      var index = (e.which + 1) % 2;
+
+      if(e.which <= 38 && snake.direction[index] === 0) {
+        snake.direction[index] = -1;
+      } else if(snake.direction[index] === 0) {
+        snake.direction[index] = 1;
+      }
+
+      snake.direction[(index + 1) % 2] = 0;
+      return false;
+    }
+
+    if(e.which === 80) {
+      if(pausable) {
+        pause = !pause;
+        return false;
+      }
+    }
+
+    if(e.which === 82) {
+      if(reversable) {
+        snake.direction = [
+          snake.body[snake.length - 1][0] - snake.body[snake.length - 2][0],
+          snake.body[snake.length - 1][1] - snake.body[snake.length - 2][1],
         ];
 
-        if(newDirection[0] === -1) { snake.direction = 'left'; }
-        else if(newDirection[0] === +1) { snake.direction = 'right'; }
-        else if(newDirection[1] === -1) { snake.direction = 'up'; }
-        else if(newDirection[1] === +1) { snake.direction = 'down'; }
-
         snake.body.reverse();
+      }
 
-        break;
+      return false;
     }
   });
 
@@ -162,27 +69,36 @@ $(document).ready(function() {
     $('#top-scores-modal').modal('toggle');
   });
 
-
-  $('#speed').val(((165 - speed) / 15).toString()).on('change', function() {
-    speed = 165 - parseInt($(this).val()) * 15;
-  });
-
-  $('#color').val(color).on('change', function() {
-    color = $(this).val();
-  });
-
   $('#pause').on('change', function() { pausable = !pausable; pause = false; });
 
   $('#reverse').on('change', function() { reversable = !reversable; });
 
+  function checkScore() {
+    if(topScores.length < 10 || snake.score > topScores[topScores.length - 1]) {
+      var name = prompt(['Congatulations! You made a new high score!',
+        'Please enter your name below.'].join('\n'));
+
+      if(name === '') { return false; }
+
+      if(topScores.length >= 10) { topScores.pop(); }
+
+      topScores.push({
+        name: name,
+        score: snake.score
+      });
+
+      topScores.sort(function(lhs, rhs) {
+        return rhs.score - lhs.score;
+      });
+
+      localStorage.setItem('topScores', JSON.stringify(topScores));
+    }
+  }
+
   function init() {
-    snake.body = [[8, 3], [7, 3], [6, 3], [5, 3], [4, 3], [3, 3]];
-    snake.length = 6;
-    snake.dead = false;
-    snake.direction = 'right';
-    snake.skinColor = color;
+    snake = new Snake($('#color').val(), 165 - parseInt($('#speed').val()) * 15);
+    snake.spawnFood();
     $('#score').text('Score: 0');
-    food.spawn();
   }
 
   function loop() {
@@ -192,27 +108,23 @@ $(document).ready(function() {
       if(error !== true) {
         alert(error.msg);
         clearInterval(intId);
-        snake.checkScore();
+        checkScore();
       }
     } else {
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      ctx.font = '30px Arial';
       ctx.fillStyle = 'black';
       ctx.fillText('Paused', canvasWidth / 2 - 50, canvasHeight / 2 - 15);
       return;
     }
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-    snake.render();
-    food.print();
-  }
 
-  $('#re-start').on('click', function() {
-    init();
-    clearInterval(intId);
-    intId = setInterval(loop, speed);
-
-    if($(this).text() === 'Start') {
-      $(this).text('Restart');
+    if(snake.dead) {
+      ctx.fillStyle = '#000000';
+      ctx.fillText('Click anywhere to start', canvasWidth / 2 - 150, canvasHeight / 2);
+      running = false;
+    } else {
+      snake.render(ctx);
     }
-  });
+    $('#score').text('Score: ' + snake.score);
+  }
 });
