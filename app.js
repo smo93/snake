@@ -1,19 +1,26 @@
+var
+  c = $('#snake'),
+  ctx = c.get(0).getContext('2d'),
+  canvasWidth = c.width(),
+  canvasHeight = c.height();
+
 $(document).ready(function() {
-  var c = $('#snake'),
-    ctx = c.get(0).getContext('2d'),
-    canvasWidth = c.width(),
-    canvasHeight = c.height(),
+  var
     intId,
     pause = false,
     pausable = false,
     reversable = false,
     running = false,
-    topScores = JSON.parse(localStorage.getItem('topScores'));
+    topScores = JSON.parse(localStorage.getItem('topScores')),
+    maxSpeed = 15,  // speed is the interval between game loops in miliseconds
+    minSpeed = 150,
+    speedDiff = Math.floor((minSpeed - maxSpeed) / 10);
 
   if(topScores === null) { topScores = []; }
 
   ctx.font = '30px Arial';
-  ctx.fillText('Click anywhere to start', canvasWidth / 2 - 150, canvasHeight / 2);
+  ctx.textAlign = 'center';
+  ctx.fillText('Click anywhere to start', canvasWidth / 2, canvasHeight / 2);
 
   $('#snake').on('mousedown', function() {
     $(this).focus();
@@ -96,7 +103,12 @@ $(document).ready(function() {
   }
 
   function init() {
-    snake = new Snake($('#color').val(), 165 - parseInt($('#speed').val()) * 15);
+    var speedUnits = parseInt($('#speed').val()) - 1;
+
+    snake = new Snake($('#color').val(), minSpeed - speedUnits * speedDiff);
+
+    console.log(snake.speed);
+
     snake.spawnFood();
     $('#score').text('Score: 0');
   }
@@ -113,14 +125,16 @@ $(document).ready(function() {
     } else {
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       ctx.fillStyle = 'black';
-      ctx.fillText('Paused', canvasWidth / 2 - 50, canvasHeight / 2 - 15);
+      ctx.textAlign = 'center';
+      ctx.fillText('Paused', canvasWidth / 2, canvasHeight / 2);
       return;
     }
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
     if(snake.dead) {
       ctx.fillStyle = '#000000';
-      ctx.fillText('Click anywhere to start', canvasWidth / 2 - 150, canvasHeight / 2);
+      ctx.textAlign = 'center';
+      ctx.fillText('Click anywhere to start', canvasWidth / 2, canvasHeight / 2);
       running = false;
     } else {
       snake.render(ctx);

@@ -1,3 +1,11 @@
+var
+  bodypartW = 10,
+  bodypartH = 10,
+  cw = canvasWidth / bodypartW,
+  ch = canvasHeight / bodypartH;
+
+  console.log(canvasWidth, ch);
+
 function Snake(color, speed) {
   if(!(this instanceof Snake)) {
     return new Snake(color, speed);
@@ -28,8 +36,8 @@ function Snake(color, speed) {
     }
 
     var next = [
-      (this.body[0][0] + this.direction[0] + 80) % 80,
-      (this.body[0][1] + this.direction[1] + 45) % 45
+      (this.body[0][0] + this.direction[0] + cw) % cw,
+      (this.body[0][1] + this.direction[1] + ch) % ch
     ];
 
     if(this.body[1][0] === next[0] && this.body[1][1] === next[1]) {
